@@ -211,6 +211,9 @@ public class PetHomeNewFragment extends Fragment implements Serializable,
     private List<PetLoverDashboardResponse.DataBean.DashboarddataBean.MiddleBannerDetailsBean> middleBannerDetailsBeanList;
 
     private Activity mActivity;
+    private SessionManager sessionManager;
+    
+    public static String percentage = "";
 
 
     public PetHomeNewFragment() {
@@ -265,7 +268,7 @@ public class PetHomeNewFragment extends Fragment implements Serializable,
       /*  txt_puppy_love.setVisibility(View.GONE);*/
         txt_seemore_puppy_love.setVisibility(View.GONE);
 
-        SessionManager sessionManager = new SessionManager(mContext);
+        sessionManager = new SessionManager(mContext);
         HashMap<String, String> user = sessionManager.getProfileDetails();
         userid = user.get(SessionManager.KEY_ID);
         Log.w(TAG,"customerid-->"+userid);
@@ -477,6 +480,12 @@ public class PetHomeNewFragment extends Fragment implements Serializable,
 
                         }
 
+                        if(response.body().getData().getPaymentdetails() != null){
+                            if(response.body().getData().getPaymentdetails().getPercentage() != null){
+                                percentage = response.body().getData().getPaymentdetails().getPercentage();
+                            }
+                            sessionManager.createRazorpayDetails(response.body().getData().getPaymentdetails().getApi_key(),response.body().getData().getPaymentdetails().getMode());
+                        }
 
                     }
                     else {

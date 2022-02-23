@@ -26,6 +26,7 @@ import com.salveo.mysalveo.api.APIClient;
 import com.salveo.mysalveo.api.RestApiInterface;
 import com.salveo.mysalveo.doctor.DoctorDashboardActivity;
 import com.salveo.mysalveo.doctor.shop.DoctorCartActivity;
+import com.salveo.mysalveo.fragmentpetlover.bottommenu.PetHomeNewFragment;
 import com.salveo.mysalveo.requestpojo.ShippingAddressDeleteRequest;
 import com.salveo.mysalveo.requestpojo.ShippingAddressFetchByUserIDRequest;
 import com.salveo.mysalveo.responsepojo.CartDetailsResponse;
@@ -160,6 +161,7 @@ public class ShippingAddressActivity extends AppCompatActivity implements View.O
     private int prodcut_count;
 
     private int prodcut_item_count;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -186,9 +188,9 @@ public class ShippingAddressActivity extends AppCompatActivity implements View.O
         img_sos.setVisibility(View.GONE);
         img_cart.setVisibility(View.GONE);
 
-        SessionManager session = new SessionManager(getApplicationContext());
+        sessionManager = new SessionManager(getApplicationContext());
 
-        HashMap<String, String> user = session.getProfileDetails();
+        HashMap<String, String> user = sessionManager.getProfileDetails();
 
         userid = user.get(SessionManager.KEY_ID);
 
@@ -211,6 +213,8 @@ public class ShippingAddressActivity extends AppCompatActivity implements View.O
             discount_price = extras.getInt("discount_price");
 
             grand_total = extras.getInt("grand_total");
+
+            Log.w(TAG,"grand_total :  "+grand_total);
 
             if (grand_total!=0){
 
@@ -788,23 +792,44 @@ public class ShippingAddressActivity extends AppCompatActivity implements View.O
         final Activity activity = this;
 
         final Checkout co = new Checkout();
+        HashMap<String, String> sessionRazorpayDetails = sessionManager.getRazorpayDetails();
+        String rzpayapikey = sessionRazorpayDetails.get(SessionManager.KEY_RAZORPAY_APIKEY);
+        Log.w(TAG,"startPayment rzpayapikey : " + rzpayapikey);
+        // set your id as below
+        co.setKeyID(rzpayapikey);
 
-        //totalamount = amount;
-
-      /*  Double d = new Double(amount);
-        int amout = d.intValue();*/
 
 
-        Integer totalamout = grand_total*100;
+
+        double percentage = 0;
+        double percentageamount = 0;
+        double totalamout = 0 ;
+        double grandtotal =0;
+
+        try{
+            percentage = Double.parseDouble(PetHomeNewFragment.percentage);
+            Log.w(TAG,"percentage : "+percentage);
+            percentageamount = (grand_total*(percentage/100));
+            Log.w(TAG,"percentageamount : "+percentageamount);
+            totalamout = grand_total+percentageamount;
+            Log.w(TAG,"totalamout : "+totalamout);
+            grandtotal = totalamout * 100;
+            Log.w(TAG,"grandtotal : "+grandtotal);
+            grand_total = (int) totalamout;
+            Log.w(TAG,"grand_total : "+grand_total);
+
+
+        }catch(NumberFormatException ignored){
+        }
 
         try {
             JSONObject options = new JSONObject();
-          options.put("name", "Salveo Health Care LLP");
+            options.put("name", "Salveo Health Care LLP");
             options.put("description", userid);
             //You can omit the image option to fetch the image from dashboard
             options.put("image", "https://s3.amazonaws.com/rzp-mobile/images/rzp.png");
             options.put("currency", "INR");
-            options.put("amount", totalamout);
+            options.put("amount", grandtotal);
 
 
             co.open(activity, options);
